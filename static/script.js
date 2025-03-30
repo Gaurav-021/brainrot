@@ -1,4 +1,3 @@
-
 let currentIndex = 0;
 let currentUrls = [];
 
@@ -102,6 +101,8 @@ const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 document.head.appendChild(tag);
 
+
+// --- Ctrl+Drag Swap Logic with Magnetic Snap ---
 let isCtrlPressed = false;
 let draggedPanel = null;
 let startX = 0;
@@ -122,6 +123,7 @@ document.querySelectorAll('.left, .right').forEach(panel => {
     currentDX = 0;
     panel.classList.add('dragging');
     panel.style.zIndex = 10;
+    panel.style.transition = 'none';
   });
 });
 
@@ -131,7 +133,7 @@ document.addEventListener('mousemove', e => {
   draggedPanel.style.transform = `translateX(${currentDX}px)`;
 });
 
-document.addEventListener('mouseup', e => {
+document.addEventListener('mouseup', () => {
   if (!draggedPanel) return;
 
   const container = document.querySelector('.container');
@@ -140,30 +142,21 @@ document.addEventListener('mouseup', e => {
 
   const rect1 = draggedPanel.getBoundingClientRect();
   const rect2 = otherPanel.getBoundingClientRect();
-
   const overlap = rect1.left < rect2.right && rect1.right > rect2.left;
 
-  if (overlap) {
-    // Snap toward center with extra shift for magnetic feel
-    draggedPanel.style.transition = 'transform 0.2s ease-out';
-    draggedPanel.style.transform = `translateX(${currentDX + (currentDX > 0 ? 30 : -30)}px)`;
-    setTimeout(() => {
-      container.insertBefore(draggedPanel, otherPanel.nextSibling);
-      draggedPanel.style.transform = '';
-      draggedPanel.classList.remove('dragging');
-      draggedPanel.style.zIndex = '';
-      draggedPanel.style.transition = '';
-    }, 150);
-  } else {
-    // No snap, return to original
-    draggedPanel.style.transition = 'transform 0.2s ease-out';
-    draggedPanel.style.transform = 'translateX(0)';
-    setTimeout(() => {
-      draggedPanel.classList.remove('dragging');
-      draggedPanel.style.zIndex = '';
-      draggedPanel.style.transition = '';
-    }, 150);
-  }
+  draggedPanel.style.transition = 'transform 0.15s ease-out';
+  draggedPanel.style.transform = overlap
+    ? `translateX(${currentDX + (currentDX > 0 ? 30 : -30)}px)`
+    : 'translateX(0)';
 
-  draggedPanel = null;
+  setTimeout(() => {
+    if (overlap) {
+      container.insertBefore(draggedPanel, otherPanel.nextSibling);
+    }
+    draggedPanel.style.transition = '';
+    draggedPanel.style.transform = '';
+    draggedPanel.style.zIndex = '';
+    draggedPanel.classList.remove('dragging');
+    draggedPanel = null;
+  }, 160);
 });
