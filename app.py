@@ -1,0 +1,60 @@
+from flask import Flask, request, render_template, jsonify
+from openai import OpenAI
+import yaml
+from ytmusicapi import YTMusic
+import re
+
+def load_api_key(config_path='config.yaml'):
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    return config['api_key']
+
+client = OpenAI(api_key=load_api_key())
+
+app = Flask(__name__)
+ytmusic = YTMusic()
+
+def get_song_recommendations(prompt):
+    response = client.chat.completions.create(model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You're a music assistant."},
+        {"role": "user", "content": f"Give me 5 songs with artist names for: {prompt}"}
+    ])
+    return extract_songs(response.choices[0].message.content)
+
+def extract_songs(gpt_output):
+    lines = gpt_output.strip().split("\n")
+    songs = []
+    for line in lines:
+        match = re.match(r'[\d\-\.\)]*\s*"?(.+?)"?\s*[-\u2013]\s*(.+)', line.strip())
+        if match:
+            title, artist = match.groups()
+            songs.append(f"{title} {artist}")
+    return songs
+
+def get_youtube_urls(song_list):
+    urls = []
+    for song in song_list:
+        results = ytmusic.search(song, filter="songs")
+        if results and 'videoId' in results[0]:
+            urls.append(f"https://www.youtube.com/watch?v={results[0]['videoId']}")
+    return urls
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/generate', methods=['POST'])
+def generate():
+    data = request.json
+    prompt = data.get("prompt")
+    if not prompt:
+        return jsonify({"error": "No prompt received"}), 400
+    songs = get_song_recommendations(prompt)
+    urls = get_youtube_urls(songs)
+    return jsonify({"songs": songs, "urls": urls})
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

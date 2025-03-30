@@ -1,0 +1,5 @@
+pyyaml
+typeguard
+Flask
+openai
+ytmusicapi
