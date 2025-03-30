@@ -8,7 +8,7 @@ import requests
 video_path = "cat.mp4"
 temp_frame_path = "frame.jpg"
 ascii_width = 80
-SERVER_URL = "http://localhost:5000/ascii"
+SERVER_URL = "http://localhost:5080/ascii"
 
 while True:  # Infinite loop
     cap = cv2.VideoCapture(video_path)
