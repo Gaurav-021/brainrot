@@ -3,3 +3,5 @@ venv/
 config.yaml
 
 frame.jpg
+
+.DS_Store
