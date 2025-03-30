@@ -1,8 +1,8 @@
 body {
-  margin: 0;
-  padding: 0;
+  margin: 0px;
+  padding: 0px;
   font-family: monospace;
-  background-color: #000;
+  background-color: #000000;
   color: lime;
   display: flex;
   height: 100vh;
@@ -23,7 +23,7 @@ body {
   position: relative;
   border-radius: 20px;
   margin: 10px;
-  background-color: #ffffff;
+  background-color: #000000;
   font-family: monospace;
   font-size: 20px;
   color: lime;
