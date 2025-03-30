@@ -83,3 +83,14 @@ li:hover {
   background-color: #55556a;
   cursor: pointer;
 }
+
+.dragging {
+  opacity: 0.8;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.left, .right {
+  transition: transform 0.2s ease;
+  will-change: transform;
+}

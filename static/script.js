@@ -102,42 +102,49 @@ const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 document.head.appendChild(tag);
 
-
 let isCtrlPressed = false;
-let isDragging = false;
 let draggedPanel = null;
+let startX = 0;
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Control') isCtrlPressed = true;
 });
-
 document.addEventListener('keyup', e => {
   if (e.key === 'Control') isCtrlPressed = false;
 });
 
 document.querySelectorAll('.left, .right').forEach(panel => {
   panel.addEventListener('mousedown', e => {
-    if (isCtrlPressed) {
-      isDragging = true;
-      draggedPanel = panel;
-      panel.style.opacity = 0.5;
-    }
+    if (!isCtrlPressed) return;
+    draggedPanel = panel;
+    startX = e.clientX;
+    panel.classList.add('dragging');
+    panel.style.zIndex = 10;
   });
+});
 
-  panel.addEventListener('mouseup', e => {
-    if (isDragging && draggedPanel !== panel) {
-      const container = document.querySelector('.container');
-      const panels = Array.from(container.children);
-      const draggedIndex = panels.indexOf(draggedPanel);
-      const targetIndex = panels.indexOf(panel);
+document.addEventListener('mousemove', e => {
+  if (!draggedPanel) return;
+  const dx = e.clientX - startX;
+  draggedPanel.style.transform = `translateX(${dx}px)`;
+});
 
-      if (draggedIndex !== targetIndex) {
-        container.insertBefore(draggedPanel, targetIndex < draggedIndex ? panel : panel.nextSibling);
-      }
-    }
+document.addEventListener('mouseup', e => {
+  if (!draggedPanel) return;
 
-    if (draggedPanel) draggedPanel.style.opacity = 1;
-    isDragging = false;
-    draggedPanel = null;
-  });
+  const container = document.querySelector('.container');
+  const panels = Array.from(container.children);
+  const otherPanel = panels.find(p => p !== draggedPanel);
+
+  const rect1 = draggedPanel.getBoundingClientRect();
+  const rect2 = otherPanel.getBoundingClientRect();
+
+  if (rect1.left < rect2.right && rect1.right > rect2.left) {
+    container.insertBefore(draggedPanel, otherPanel.nextSibling);
+  }
+
+  draggedPanel.classList.remove('dragging');
+  draggedPanel.style.transform = '';
+  draggedPanel.style.zIndex = '';
+  draggedPanel = null;
 });
