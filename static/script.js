@@ -111,18 +111,22 @@ input.addEventListener('keydown', async (e) => {
       case 'list':
         updatePlaylistUI();
         break;
+      case 'n':
       case 'next':
         currentIndex = (currentIndex + 1) % playlist.length;
         updatePlaylistUI();
         break;
+      case 'p':
       case 'prev':
       case 'previous':
         currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
         updatePlaylistUI();
         break;
+      case 'v':
       case 'voice':
         startVoiceRecognition();
         break;
+      case 'h':
       case 'help':
         appendToASCII(`🆘 Available Commands:
 - any phrase → get GPT music recs
