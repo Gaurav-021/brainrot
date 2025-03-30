@@ -1,3 +1,4 @@
+
 let currentIndex = 0;
 let currentUrls = [];
 
@@ -102,61 +103,41 @@ tag.src = 'https://www.youtube.com/iframe_api';
 document.head.appendChild(tag);
 
 
-// --- Ctrl+Drag Swap Logic with Magnetic Snap ---
 let isCtrlPressed = false;
+let isDragging = false;
 let draggedPanel = null;
-let startX = 0;
-let currentDX = 0;
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Control') isCtrlPressed = true;
 });
+
 document.addEventListener('keyup', e => {
   if (e.key === 'Control') isCtrlPressed = false;
 });
 
 document.querySelectorAll('.left, .right').forEach(panel => {
   panel.addEventListener('mousedown', e => {
-    if (!isCtrlPressed) return;
-    draggedPanel = panel;
-    startX = e.clientX;
-    currentDX = 0;
-    panel.classList.add('dragging');
-    panel.style.zIndex = 10;
-    panel.style.transition = 'none';
-  });
-});
-
-document.addEventListener('mousemove', e => {
-  if (!draggedPanel) return;
-  currentDX = e.clientX - startX;
-  draggedPanel.style.transform = `translateX(${currentDX}px)`;
-});
-
-document.addEventListener('mouseup', () => {
-  if (!draggedPanel) return;
-
-  const container = document.querySelector('.container');
-  const panels = Array.from(container.children);
-  const otherPanel = panels.find(p => p !== draggedPanel);
-
-  const rect1 = draggedPanel.getBoundingClientRect();
-  const rect2 = otherPanel.getBoundingClientRect();
-  const overlap = rect1.left < rect2.right && rect1.right > rect2.left;
-
-  draggedPanel.style.transition = 'transform 0.15s ease-out';
-  draggedPanel.style.transform = overlap
-    ? `translateX(${currentDX + (currentDX > 0 ? 30 : -30)}px)`
-    : 'translateX(0)';
-
-  setTimeout(() => {
-    if (overlap) {
-      container.insertBefore(draggedPanel, otherPanel.nextSibling);
+    if (isCtrlPressed) {
+      isDragging = true;
+      draggedPanel = panel;
+      panel.style.opacity = 0.5;
     }
-    draggedPanel.style.transition = '';
-    draggedPanel.style.transform = '';
-    draggedPanel.style.zIndex = '';
-    draggedPanel.classList.remove('dragging');
+  });
+
+  panel.addEventListener('mouseup', e => {
+    if (isDragging && draggedPanel !== panel) {
+      const container = document.querySelector('.container');
+      const panels = Array.from(container.children);
+      const draggedIndex = panels.indexOf(draggedPanel);
+      const targetIndex = panels.indexOf(panel);
+
+      if (draggedIndex !== targetIndex) {
+        container.insertBefore(draggedPanel, targetIndex < draggedIndex ? panel : panel.nextSibling);
+      }
+    }
+
+    if (draggedPanel) draggedPanel.style.opacity = 1;
+    isDragging = false;
     draggedPanel = null;
-  }, 160);
+  });
 });
