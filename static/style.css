@@ -51,9 +51,9 @@ body {
 
 .terminal-input {
   position: fixed; /* changed from absolute */
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
+  bottom: 30px;
+  left: 30px;
+  right: 30px;
   display: flex;
   align-items: center;
   background-color: transparent;
