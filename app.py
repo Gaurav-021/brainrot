@@ -1,7 +1,8 @@
 from flask import Flask, request, render_template, jsonify
-from openai import OpenAI
-import yaml
 from ytmusicapi import YTMusic
+from openai import OpenAI
+import threading
+import yaml
 import re
 
 def load_api_key(config_path='config.yaml'):
@@ -10,6 +11,9 @@ def load_api_key(config_path='config.yaml'):
     return config['api_key']
 
 client = OpenAI(api_key=load_api_key())
+
+ascii_frame = ""
+ascii_lock = threading.Lock()
 
 app = Flask(__name__)
 ytmusic = YTMusic()
@@ -54,7 +58,18 @@ def generate():
     urls = get_youtube_urls(songs)
     return jsonify({"songs": songs, "urls": urls})
 
+@app.route('/ascii', methods=['GET'])
+def get_ascii():
+    with ascii_lock:
+        return jsonify({"frame": ascii_frame})
 
+@app.route('/ascii', methods=['POST'])
+def update_ascii():
+    global ascii_frame
+    data = request.json
+    with ascii_lock:
+        ascii_frame = data.get("frame", "")
+    return "", 204
 
 if __name__ == '__main__':
     app.run(debug=True)

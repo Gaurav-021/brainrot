@@ -43,3 +43,14 @@ function startVoiceCommand() {
     alert('Voice recognition error: ' + event.error);
   };
 }
+
+function pollAsciiStream() {
+  fetch('/ascii')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('ascii-output').textContent = data.frame;
+    })
+    .catch(console.error);
+}
+
+setInterval(pollAsciiStream, 100);
