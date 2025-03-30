@@ -1,143 +1,148 @@
+const input = document.getElementById('prompt');
+const playlistElement = document.getElementById('playlist');
+const playerStatus = document.getElementById('player-status');
+const ytPlayer = document.getElementById('yt-player');
+const asciiOutput = document.getElementById('ascii-output');
 
+let playlist = [];
+let videoIds = [];
 let currentIndex = 0;
-let currentUrls = [];
 
-async function generatePlaylist() {
-  const prompt = document.getElementById('prompt').value;
-  const res = await fetch('/generate', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ prompt })
-  });
-  const data = await res.json();
-  const playlist = document.getElementById('playlist');
-  const playerContainer = document.getElementById('player-container');
-  playlist.innerHTML = '';
-  playerContainer.innerHTML = '';
-  currentUrls = data.urls;
-  currentIndex = 0;
-
-  data.urls.forEach((url, i) => {
-    const li = document.createElement('li');
-    li.textContent = data.songs[i];
-    li.onclick = () => playSong(i);
-    playlist.appendChild(li);
-  });
-
-  playSong(0);
-}
-
-function playSong(index) {
-  currentIndex = index;
-  const videoId = new URL(currentUrls[index]).searchParams.get('v');
-  const playerContainer = document.getElementById('player-container');
-  playerContainer.innerHTML = '';
-
-  const iframe = document.createElement('iframe');
-  iframe.width = '560';
-  iframe.height = '315';
-  iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
-  iframe.id = 'ytplayer';
-  iframe.allow = 'autoplay';
-  playerContainer.appendChild(iframe);
-}
-
-function onYouTubeIframeAPIReady() {
-  const player = new YT.Player('ytplayer', {
-    events: {
-      'onStateChange': function(event) {
-        if (event.data === YT.PlayerState.ENDED) {
-          if (currentIndex + 1 < currentUrls.length) {
-            playSong(currentIndex + 1);
-          }
-        }
-      }
-    }
-  });
-}
-
-function startVoiceCommand() {
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = 'en-US';
-  recognition.start();
-
-  recognition.onresult = function(event) {
-    const transcript = event.results[0][0].transcript;
-    document.getElementById('prompt').value = transcript;
-    generatePlaylist();
-  };
-
-  recognition.onerror = function(event) {
-    alert('Voice recognition error: ' + event.error);
-  };
-}
-
-function pollAsciiStream() {
+// 🔁 Polling ASCII
+setInterval(() => {
   fetch('/ascii')
     .then(res => res.json())
     .then(data => {
-      document.getElementById('ascii-output').textContent = data.frame;
+      asciiOutput.textContent = data.frame;
     })
     .catch(console.error);
+}, 100);
+
+// 🎵 UI + Playback
+function updatePlaylistUI() {
+  playlistElement.innerHTML = playlist.map((song, idx) =>
+    `<li class="${idx === currentIndex ? 'active' : ''}">${song}</li>`
+  ).join('');
+
+  playerStatus.innerText = `🎵 Now playing: ${playlist[currentIndex] || "Nothing"}`;
+  ytPlayer.src = `https://www.youtube.com/embed/${videoIds[currentIndex] || ""}?autoplay=1`;
+
+  document.querySelectorAll("#playlist li").forEach((li, idx) => {
+    li.onclick = () => {
+      currentIndex = idx;
+      updatePlaylistUI();
+    };
+  });
 }
 
-setInterval(pollAsciiStream, 100);
+// 📜 Append to ASCII output
+function appendToASCII(text) {
+  asciiOutput.textContent += `\n${text}`;
+  asciiOutput.scrollTop = asciiOutput.scrollHeight;
+}
 
-function downloadYouTubeVideo() {
-  const query = document.getElementById('yt-search').value;
-  fetch('/download', {
+// 🤖 ChatGPT call
+async function fetchGPTSuggestions(prompt) {
+  const res = await fetch('/generate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query })
-  })
-    .then(res => res.json())
-    .then(data => {
-      alert(data.message || data.error);
-    })
-    .catch(err => alert('Error: ' + err));
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await res.json();
+  playlist = data.songs || [];
+  videoIds = (data.urls || []).map(url => new URL(url).searchParams.get('v'));
+  currentIndex = 0;
+  updatePlaylistUI();
 }
 
-// Load YouTube IFrame API
-const tag = document.createElement('script');
-tag.src = 'https://www.youtube.com/iframe_api';
-document.head.appendChild(tag);
+// 🎙️ Voice Recognition Handler
+function startVoiceRecognition() {
+  const existingGlyph = document.getElementById('voice-status');
+  if (existingGlyph) existingGlyph.remove();
 
+  const voiceGlyph = document.createElement('div');
+  voiceGlyph.innerHTML = `
+    🎤 Listening<span class="dot-anim">.</span>
+    <span class="dot-anim">.</span>
+    <span class="dot-anim">.</span>
+  `;
+  voiceGlyph.style.position = 'absolute';
+  voiceGlyph.style.bottom = '50px';
+  voiceGlyph.style.left = '10px';
+  voiceGlyph.style.color = 'lime';
+  voiceGlyph.style.fontFamily = 'monospace';
+  voiceGlyph.id = 'voice-status';
+  document.body.appendChild(voiceGlyph);
 
-let isCtrlPressed = false;
-let isDragging = false;
-let draggedPanel = null;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    voiceGlyph.innerText = '🎤 Voice recognition not supported.';
+    return;
+  }
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Control') isCtrlPressed = true;
-});
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
 
-document.addEventListener('keyup', e => {
-  if (e.key === 'Control') isCtrlPressed = false;
-});
+  recognition.onresult = async (event) => {
+    const transcript = event.results[0][0].transcript;
+    input.value = transcript;
+    input.focus();
+    appendToASCII(`> ${transcript}`);
+    await fetchGPTSuggestions(transcript);
+    voiceGlyph.remove();
+  };
 
-document.querySelectorAll('.left, .right').forEach(panel => {
-  panel.addEventListener('mousedown', e => {
-    if (isCtrlPressed) {
-      isDragging = true;
-      draggedPanel = panel;
-      panel.style.opacity = 0.5;
+  recognition.onerror = () => voiceGlyph.remove();
+  recognition.onend = () => voiceGlyph.remove();
+  recognition.start();
+}
+
+// 🎛️ Main Command Handler
+input.addEventListener('keydown', async (e) => {
+  const command = input.value.trim().toLowerCase();
+
+  if (e.key === 'Enter') {
+    input.value = '';
+    appendToASCII(`> ${command}`);
+
+    switch (command) {
+      case 'list':
+        updatePlaylistUI();
+        break;
+      case 'next':
+        currentIndex = (currentIndex + 1) % playlist.length;
+        updatePlaylistUI();
+        break;
+      case 'prev':
+      case 'previous':
+        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+        updatePlaylistUI();
+        break;
+      case 'voice':
+        startVoiceRecognition();
+        break;
+      case 'help':
+        appendToASCII(`🆘 Available Commands:
+- any phrase → get GPT music recs
+- next → play next song
+- prev / previous → go back
+- list → view current playlist
+- voice → start voice recognition
+- help → show this help menu`);
+        break;
+      default:
+        await fetchGPTSuggestions(command);
     }
-  });
+  }
 
-  panel.addEventListener('mouseup', e => {
-    if (isDragging && draggedPanel !== panel) {
-      const container = document.querySelector('.container');
-      const panels = Array.from(container.children);
-      const draggedIndex = panels.indexOf(draggedPanel);
-      const targetIndex = panels.indexOf(panel);
-
-      if (draggedIndex !== targetIndex) {
-        container.insertBefore(draggedPanel, targetIndex < draggedIndex ? panel : panel.nextSibling);
-      }
-    }
-
-    if (draggedPanel) draggedPanel.style.opacity = 1;
-    isDragging = false;
-    draggedPanel = null;
-  });
+  // ⬆️ ⬇️ Keyboard Arrow Nav
+  else if (e.key === 'ArrowUp') {
+    currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+    updatePlaylistUI();
+  } else if (e.key === 'ArrowDown') {
+    currentIndex = (currentIndex + 1) % playlist.length;
+    updatePlaylistUI();
+  }
 });
