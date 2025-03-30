@@ -105,6 +105,7 @@ document.head.appendChild(tag);
 let isCtrlPressed = false;
 let draggedPanel = null;
 let startX = 0;
+let currentDX = 0;
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Control') isCtrlPressed = true;
@@ -118,6 +119,7 @@ document.querySelectorAll('.left, .right').forEach(panel => {
     if (!isCtrlPressed) return;
     draggedPanel = panel;
     startX = e.clientX;
+    currentDX = 0;
     panel.classList.add('dragging');
     panel.style.zIndex = 10;
   });
@@ -125,8 +127,8 @@ document.querySelectorAll('.left, .right').forEach(panel => {
 
 document.addEventListener('mousemove', e => {
   if (!draggedPanel) return;
-  const dx = e.clientX - startX;
-  draggedPanel.style.transform = `translateX(${dx}px)`;
+  currentDX = e.clientX - startX;
+  draggedPanel.style.transform = `translateX(${currentDX}px)`;
 });
 
 document.addEventListener('mouseup', e => {
@@ -139,12 +141,29 @@ document.addEventListener('mouseup', e => {
   const rect1 = draggedPanel.getBoundingClientRect();
   const rect2 = otherPanel.getBoundingClientRect();
 
-  if (rect1.left < rect2.right && rect1.right > rect2.left) {
-    container.insertBefore(draggedPanel, otherPanel.nextSibling);
+  const overlap = rect1.left < rect2.right && rect1.right > rect2.left;
+
+  if (overlap) {
+    // Snap toward center with extra shift for magnetic feel
+    draggedPanel.style.transition = 'transform 0.2s ease-out';
+    draggedPanel.style.transform = `translateX(${currentDX + (currentDX > 0 ? 30 : -30)}px)`;
+    setTimeout(() => {
+      container.insertBefore(draggedPanel, otherPanel.nextSibling);
+      draggedPanel.style.transform = '';
+      draggedPanel.classList.remove('dragging');
+      draggedPanel.style.zIndex = '';
+      draggedPanel.style.transition = '';
+    }, 150);
+  } else {
+    // No snap, return to original
+    draggedPanel.style.transition = 'transform 0.2s ease-out';
+    draggedPanel.style.transform = 'translateX(0)';
+    setTimeout(() => {
+      draggedPanel.classList.remove('dragging');
+      draggedPanel.style.zIndex = '';
+      draggedPanel.style.transition = '';
+    }, 150);
   }
 
-  draggedPanel.classList.remove('dragging');
-  draggedPanel.style.transform = '';
-  draggedPanel.style.zIndex = '';
   draggedPanel = null;
 });
