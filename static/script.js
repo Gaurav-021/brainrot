@@ -101,3 +101,43 @@ function downloadYouTubeVideo() {
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 document.head.appendChild(tag);
+
+
+let isCtrlPressed = false;
+let isDragging = false;
+let draggedPanel = null;
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Control') isCtrlPressed = true;
+});
+
+document.addEventListener('keyup', e => {
+  if (e.key === 'Control') isCtrlPressed = false;
+});
+
+document.querySelectorAll('.left, .right').forEach(panel => {
+  panel.addEventListener('mousedown', e => {
+    if (isCtrlPressed) {
+      isDragging = true;
+      draggedPanel = panel;
+      panel.style.opacity = 0.5;
+    }
+  });
+
+  panel.addEventListener('mouseup', e => {
+    if (isDragging && draggedPanel !== panel) {
+      const container = document.querySelector('.container');
+      const panels = Array.from(container.children);
+      const draggedIndex = panels.indexOf(draggedPanel);
+      const targetIndex = panels.indexOf(panel);
+
+      if (draggedIndex !== targetIndex) {
+        container.insertBefore(draggedPanel, targetIndex < draggedIndex ? panel : panel.nextSibling);
+      }
+    }
+
+    if (draggedPanel) draggedPanel.style.opacity = 1;
+    isDragging = false;
+    draggedPanel = null;
+  });
+});
