@@ -7,7 +7,7 @@ import requests
 # video_path = "spinning_record.mp4"
 # video_path = "cat.mp4"
 # video_path = "thor.mp4"
-video_path = "rick2.mp4"
+video_path = "./video/rick2.mp4"
 temp_frame_path = "frame.jpg"
 ascii_width = 130
 SERVER_URL = "http://localhost:5080/ascii"

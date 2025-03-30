@@ -32,7 +32,7 @@ body {
 
 #ascii-output {
   width: 100%;
-  height: calc(100% - 240px); /* reduce height to make room for input */
+  height: calc(80%); /* reduce height to make room for input */
   background: rgb(0, 0, 0);
   color: lime;
   font-family: monospace;
@@ -81,7 +81,11 @@ body {
 #playlist li.active {
   background-color: lime;
   color: black;
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
+
 
 .dot-anim {
   animation: blink 1s infinite;
