@@ -91,6 +91,18 @@ li:hover {
 }
 
 .left, .right {
-  transition: transform 0.2s ease;
+  position: relative;
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  border-radius: 20px;
+  margin: 10px;
+  background-color: #1e1e2f;
+  transition: transform 0.3s ease, opacity 0.2s ease, order 0.4s ease;
+  cursor: grab;
   will-change: transform;
 }
