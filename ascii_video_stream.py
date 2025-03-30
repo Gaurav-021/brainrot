@@ -4,7 +4,8 @@ import time
 import subprocess
 import requests
 
-video_path = "thor.mp4"
+# video_path = "spinning_record.mp4"
+video_path = "cat.mp4"
 temp_frame_path = "frame.jpg"
 ascii_width = 80
 SERVER_URL = "http://localhost:5000/ascii"

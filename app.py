@@ -22,7 +22,7 @@ def get_song_recommendations(prompt):
     response = client.chat.completions.create(model="gpt-4o-mini",
     messages=[
         {"role": "system", "content": "You're a music assistant."},
-        {"role": "user", "content": f"Give me 5 songs with artist names for: {prompt}"}
+        {"role": "user", "content": f"List me 5 songs with artist names that fits the request of {prompt} without any extra responses."}
     ])
     return extract_songs(response.choices[0].message.content)
 
