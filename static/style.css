@@ -32,7 +32,7 @@ body {
 
 #ascii-output {
   width: 100%;
-  height: calc(80%); /* reduce height to make room for input */
+  height: calc(50%); /* reduce height to make room for input */
   background: rgb(0, 0, 0);
   color: lime;
   font-family: monospace;
@@ -45,8 +45,14 @@ body {
 }
 
 #player-status {
-  margin-bottom: 20px;
+  position: absolute;
+  top: 1155px;
+  left: 10px;
+  color: lime;
+  font-family: monospace;
+  z-index: 2;
 }
+
 
 
 .terminal-input {
@@ -107,4 +113,15 @@ body {
   40% {
     opacity: 1;
   }
+}
+
+#voice-status {
+  position: absolute;
+  bottom: 150px; /* increased from 90px to clear playlist */
+  left: 20px;
+  color: lime;
+  font-family: monospace;
+  padding: 20px;
+  pointer-events: none;
+  z-index: 1000;
 }

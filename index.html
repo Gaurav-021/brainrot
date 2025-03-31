@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Music Assistant</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/script.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <!-- ASCII stream area -->
+    <div class="vid">
+      <pre id="ascii-output">Loading ASCII feed...</pre>
+    </div>
+
+      <!-- Terminal-style input -->
+      <div class="terminal-input">
+        <span class="prompt-sign">&gt;</span>
+        <input type="text" id="prompt" placeholder="Type a command..." />
+      </div>
+
+      <ul id="playlist"></ul>
+      <div id="player-status"></div>
+
+      <!-- Hidden YouTube player -->
+      <iframe 
+        id="yt-player"
+        style="width:0;height:0;border:0;visibility:hidden;" 
+        allow="autoplay"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
+</body>
+</html>

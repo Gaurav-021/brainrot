@@ -47,7 +47,7 @@ while True:  # Infinite loop
             except requests.exceptions.RequestException as e:
                 print("Failed to send frame:", e)
 
-            time.sleep(.01)  # Adjust for FPS
+            time.sleep(.03)  # Adjust for FPS
     finally:
         cap.release()
         if os.path.exists(temp_frame_path):
