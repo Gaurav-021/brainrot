@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, jsonify
 from ytmusicapi import YTMusic
-from openai import OpenAI
+from google import genai
 import threading
 import yaml
 import re
@@ -8,9 +8,9 @@ import re
 def load_api_key(config_path='config.yaml'):
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
-    return config['api_key']
+    return config['gemini']
 
-client = OpenAI(api_key=load_api_key())
+client = genai.Client(api_key=load_api_key())
 
 ascii_frame = ""
 ascii_lock = threading.Lock()
@@ -18,16 +18,20 @@ ascii_lock = threading.Lock()
 app = Flask(__name__)
 ytmusic = YTMusic()
 
-def get_song_recommendations(prompt):
-    response = client.chat.completions.create(model="gpt-4o-mini",
-    messages=[
-        {"role": "system", "content": "You're a music assistant that gets music that are only lyrics music video."},
-        {"role": "user", "content": f"List me 5 songs with artist names that fits the request of {prompt} without any extra responses."}
-    ])
-    return extract_songs(response.choices[0].message.content)
+def get_song_recommendations(input):
 
-def extract_songs(gpt_output):
-    lines = gpt_output.strip().split("\n")
+    prompt = f"List me 5 songs with artist names that fits the request of {input} without any extra responses. You're a music assistant that gets music that are only lyrics music video. Just list the songs, no commentary. If I list a song name, make that the first song and make the rest similar songs."
+
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt
+    )
+
+    print(response)
+    return extract_songs(str(response.candidates[0].content.parts[0].text))
+
+def extract_songs(output):
+    lines = output.strip().split("\n")
     songs = []
     for line in lines:
         match = re.match(r'[\d\-\.\)]*\s*"?(.+?)"?\s*[-\u2013]\s*(.+)', line.strip())

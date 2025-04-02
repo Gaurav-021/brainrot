@@ -2,5 +2,5 @@ opencv-python
 pyyaml
 typeguard
 Flask
-openai
+google-genai
 ytmusicapi
