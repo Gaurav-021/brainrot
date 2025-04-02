@@ -141,7 +141,6 @@ brainrot/
 
 ## 🛠️ Ideas for Future Additions
 
-- 🎤 Real-time **posture slouch detection**
 - 🧠 Personalized **mood-based AI playlists**
 - 💾 Save/load **playlist history**
 - 🔊 Volume & playback speed control
